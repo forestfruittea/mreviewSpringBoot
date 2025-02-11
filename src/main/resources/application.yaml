@@ -1,0 +1,54 @@
+spring:
+  application:
+    name: springBootMovie
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: admin
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 30000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate.jdbc.time_zone: Europe/Moscow
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    out-of-order: true
+
+logging:
+  level:
+    root: INFO
+
+jwt:
+  secret:
+    key: masdmKADSlkaefnlkanefjAJKefbkesbgB:AFEjskebgkjsdbvkjsdflkadw;mfKLNGlksnklfenlkfnslklkNKneklfnklsnefklnseflkdskglkgbrsnelkfn
+  access:
+    expiration: 30m
+  refresh:
+    expiration: 7d
+
+management:
+   endpoints:
+     web:
+       exposure:
+         include: health,info,metrics
+
+# Custom base paths for images
+base:
+  avatar: goroh.png
+admin:
+  avatar: zombiePunk.png
+moderator:
+  avatar: zombieCute.png

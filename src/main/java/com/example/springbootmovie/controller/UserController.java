@@ -1,5 +1,6 @@
 package com.example.springbootmovie.controller;
 
+import com.example.springbootmovie.exception.ResourceNotFoundException;
 import com.example.springbootmovie.model.dto.MovieDto;
 import com.example.springbootmovie.model.dto.RatingDto;
 import com.example.springbootmovie.model.dto.ReviewDto;
@@ -8,78 +9,99 @@ import com.example.springbootmovie.service.RatingService;
 import com.example.springbootmovie.service.ReviewService;
 import com.example.springbootmovie.service.UserService;
 import com.example.springbootmovie.util.SecurityUtil;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Controller
+@Tag(name = "Users", description = "Endpoints for managing users, their ratings, and reviews")
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
     private final RatingService ratingService;
     private final ReviewService reviewService;
 
-    @Autowired
     public UserController(UserService userService, RatingService ratingService, ReviewService reviewService) {
         this.userService = userService;
         this.ratingService = ratingService;
         this.reviewService = reviewService;
     }
 
-    @GetMapping("/userprofile")
-    public String getUserDetails(@RequestParam("id") Long userId, Model model) {
-        // Fetch user details (avatar, username)
-        Optional<UserDto> userOpt = userService.findById(userId);
-        if (userOpt.isEmpty()) {
-            return "error/404";
-        }
-        UserDto user = userOpt.get();
+    @Operation(
+            summary = "Get user details",
+            description = "Fetches user information along with their rated movies and individual movie ratings."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User details retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @GetMapping("/{userId}")
+    public ResponseEntity<?> getUserDetails(
+            @Parameter(description = "ID of the user", example = "1")
+            @PathVariable Long userId) {
+        UserDto user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + userId + " not found"));
 
         List<RatingDto> ratings = ratingService.findByUser(userId);
-
         Map<Long, RatingDto> movieRatings = ratings.stream()
                 .collect(Collectors.toMap(rating -> rating.getMovie().getId(), rating -> rating));
 
         List<MovieDto> ratedMovies = ratings.stream()
                 .map(RatingDto::getMovie)
-                .collect(Collectors.toList());
+                .toList();
 
-        model.addAttribute("user", user);
-        model.addAttribute("ratedMovies", ratedMovies);
-        model.addAttribute("movieRatings", movieRatings);  // Pass the movie ratings map to the view
+        Map<String, Object> response = Map.of(
+                "user", user,
+                "ratedMovies", ratedMovies,
+                "movieRatings", movieRatings
+        );
 
-        return "user-details"; // JSP or Thymeleaf template for the user profile
+        return ResponseEntity.ok(response);
     }
+
+    @Operation(
+            summary = "Get logged-in user details",
+            description = "Retrieves details of the currently authenticated user."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Account details retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
     @GetMapping("/account")
-    public String getAccountDetails(Model model) {
+    public ResponseEntity<?> getAccountDetails() {
         Long userId = SecurityUtil.getLoggedInUserId();
-        Optional<UserDto> userOptional = userService.findById(userId);
+        UserDto user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID "+ userId + " not found"));
 
-        if (userOptional.isPresent()) {
-            UserDto user = userOptional.get();
-            model.addAttribute("user", user);
-            return "account";  // Return view for account details (e.g., account.jsp or Thymeleaf template)
-        } else {
-            return "error/404";  // Custom error view
-        }
+        return ResponseEntity.ok(user);
     }
 
-    // Display all reviews made by the logged-in user
+    @Operation(
+            summary = "Get logged-in user reviews",
+            description = "Fetches all reviews made by the currently authenticated user."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User reviews retrieved successfully"),
+            @ApiResponse(responseCode = "204", description = "No reviews found for the user")
+    })
     @GetMapping("/account/reviews")
-    public String getAccountReviews(Model model) {
+    public ResponseEntity<?> getAccountReviews() {
         Long userId = SecurityUtil.getLoggedInUserId();
         List<ReviewDto> reviews = reviewService.findAllForUser(userId);
 
-        model.addAttribute("reviews", reviews);
-        return "account-reviews";  // Return view for user reviews (e.g., account-reviews.jsp or Thymeleaf template)
+        if (reviews.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(reviews);
     }
 }
-
-

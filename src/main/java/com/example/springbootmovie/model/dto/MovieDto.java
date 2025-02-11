@@ -1,4 +1,5 @@
 package com.example.springbootmovie.model.dto;
+
 import com.example.springbootmovie.model.entity.MovieEntity;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -7,9 +8,7 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.ResourceBundle;
 
 
 @Getter
@@ -24,13 +23,17 @@ public class MovieDto {
     private String title;
     @Size(max = 500, message = "Description must be at most 500 characters")
     private String description;
+    @NotNull(message = "Country cannot be null")
     private String country;
     @Valid
     private DirectorDto director;
     @Valid
+    @Size(min = 1, message = "At least one actor is required")
     private List<ActorDto> actors;
     @Valid
+    @Size(min = 1, message = "At least one genre is required")
     private List<GenreDto> genres;
+    @NotNull(message = "Release date cannot be null")
     private LocalDate releaseDate;
     @NotNull(message = "Poster path cannot be null.")
     @Size(min = 1, max = 255, message = "Poster path must be between 1 and 255 characters")
@@ -41,21 +44,23 @@ public class MovieDto {
     private Long budget;
     @Positive(message = "Box office must be a positive number")
     private Long boxOffice;
+    @Valid
     private List<ReviewDto> reviews;
     private double averageRating;
-
-    //Uses in JSPs
-    public String getFullPosterPath() {
-        String basePath = ResourceBundle.getBundle("application").getString("base.poster.path");
-        if (posterPath != null && !posterPath.isEmpty()) {
-            return basePath + posterPath;
-        }
-        return null;
-    }
-    public String getReleaseYear() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy");
-        return releaseDate.format(formatter);
-    }
+    @Valid
+    private RatingDto userRating;
+//    //Uses in JSPs
+//    public String getFullPosterPath() {
+//        String basePath = ResourceBundle.getBundle("application").getString("base.poster.path");
+//        if (posterPath != null && !posterPath.isEmpty()) {
+//            return basePath + posterPath;
+//        }
+//        return null;
+//    }
+//    public String getReleaseYear() {
+//        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy");
+//        return releaseDate.format(formatter);
+//    }
     public static MovieDto of(MovieEntity movie) {
         return MovieDto.builder()
                 .id(movie.getId())

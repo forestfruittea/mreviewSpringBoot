@@ -1,5 +1,7 @@
 package com.example.springbootmovie.service;
 import com.example.springbootmovie.model.dto.GenreDto;
+import com.example.springbootmovie.model.entity.GenreEntity;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -9,9 +11,8 @@ public interface GenreService {
     Optional<GenreDto> findById(Long genreId);
     List<GenreDto> findAllByMovieId(Long movieId);
     List<GenreDto> findAll();
-    GenreDto findOrSave(GenreDto genreDto);
     List<GenreDto> findAllSorted();
-    List<GenreDto> getGenresByNames(List<String> genreNames);
+    List<GenreEntity> findOrCreateGenres(List<GenreDto> genreDtos);
     //TODO GenreDto update(GenreDto genreDto);
 
 }

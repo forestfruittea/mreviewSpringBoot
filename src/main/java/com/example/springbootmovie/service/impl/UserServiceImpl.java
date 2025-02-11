@@ -29,37 +29,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional
     public boolean registerUser(UserDto userDto) {
-        if (userRepository.existsByUsername(userDto.getUsername())) {
-            return false;
-        }
-
         setAvatarForRole(userDto.getRole(), userDto);
         UserEntity newUser = userMapper.toEntity(userDto);
-        try {
-            userRepository.save(newUser);
-            return true;
-        } catch (PersistenceException e) {
-            return false;
-        }
+
+        userRepository.save(newUser);
+        return true;
     }
     public void setAvatarForRole(Role role, UserDto userDto) {
         String avatarPath;
         ResourceBundle resourceBundle = ResourceBundle.getBundle("application");
 
-        switch (role) {
-            case ROLE_CUSTOMER:
-                avatarPath = resourceBundle.getString("base.avatar");
-                break;
-            case ROLE_MODERATOR:
-                avatarPath = resourceBundle.getString("moderator.avatar");
-                break;
-            case ROLE_ADMIN:
-                avatarPath = resourceBundle.getString("admin.avatar");
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown role: " + role);
-        }
+        avatarPath = switch (role) {
+            case ROLE_CUSTOMER -> resourceBundle.getString("base.avatar");
+            case ROLE_MODERATOR -> resourceBundle.getString("moderator.avatar");
+            case ROLE_ADMIN -> resourceBundle.getString("admin.avatar");
+            default -> throw new IllegalArgumentException("Unknown role: " + role);
+        };
 
         userDto.setAvatarPath(avatarPath);
     }
@@ -98,19 +85,5 @@ public class UserServiceImpl implements UserService {
     @Override
     public Optional<UserDto> findByUsername(String username){
         return userRepository.findByUsername(username).map(UserDto::of);
-    }
-    @Override
-    @Transactional(readOnly = true)
-    public Long getLoggedInUserId(HttpServletRequest req) {
-        HttpSession session = req.getSession(false);
-        if (session != null) {
-            Object userId = session.getAttribute("userId");
-
-            if (userId != null) {
-                return (Long) userId;
-            }
-        }
-
-        return null;
     }
 }

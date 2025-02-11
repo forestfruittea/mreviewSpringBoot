@@ -3,7 +3,11 @@ package com.example.springbootmovie.model.entity;
 import com.example.springbootmovie.model.role.Role;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 @Entity
@@ -33,10 +37,11 @@ public class UserEntity {
     private String password;
     @Column(name = "avatar_path")
     private String avatarPath;
-    @Enumerated(EnumType.STRING)  // Ensure Role is stored as a string in the DB
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<ReviewEntity> reviews;
+
 }

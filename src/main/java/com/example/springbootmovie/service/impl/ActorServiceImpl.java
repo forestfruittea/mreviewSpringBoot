@@ -43,7 +43,7 @@ public class ActorServiceImpl implements ActorService {
 //    }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(Long id) {
         log.debug("deletes actor by id");
         actorRepository.deleteById(id);
@@ -75,25 +75,12 @@ public class ActorServiceImpl implements ActorService {
                 .map(actorMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional
-    public ActorDto findOrSave(ActorDto actorDto) {
-        Optional<ActorEntity> existing = actorRepository.findByName(actorDto.getName());
-        if (existing.isPresent()) {
-            return actorMapper.toDto(existing.get());
-        }
-        ActorEntity newActor = actorMapper.toEntity(actorDto);
-        ActorEntity savedActor = actorRepository.save(newActor);
-        log.debug("saves actor if not exist ");
-        return actorMapper.toDto(savedActor);
-    }
-    @Override
-    @Transactional(readOnly = true)
-    public List<ActorDto> getActorsByNames(List<String> actorNames) {
-        // Find actors by their names
-        return actorRepository.findByNameIn(actorNames).stream()
-                .map(ActorDto::of) // Map Actor to ActorDto
+    public List<ActorEntity> findOrCreateActors(List<ActorDto> actorDtos) {
+        return actorDtos.stream()
+                .map(actorDto -> actorRepository.findByName(actorDto.getName())
+                        .orElseGet(() -> actorRepository.save(actorMapper.toEntity(actorDto))))
                 .collect(Collectors.toList());
     }
 }

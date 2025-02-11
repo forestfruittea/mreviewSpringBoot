@@ -1,5 +1,7 @@
 package com.example.springbootmovie.service;
 import com.example.springbootmovie.model.dto.ActorDto;
+import com.example.springbootmovie.model.entity.ActorEntity;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -9,10 +11,7 @@ public interface ActorService {
     Optional<ActorDto> findById(Long actorId);
     List<ActorDto> findAll();
     List<ActorDto> findAllSorted();
-    ActorDto findOrSave(ActorDto actorDto);
-
-    List<ActorDto> getActorsByNames(List<String> actorNames);
-
+    List<ActorEntity> findOrCreateActors(List<ActorDto> actorDtos);
     //TODO   DirectorDto update(DirectorDto directorDto);
 
 }

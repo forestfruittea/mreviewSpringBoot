@@ -1,6 +1,7 @@
 package com.example.springbootmovie.model.dto;
 
 import com.example.springbootmovie.model.entity.ActorEntity;
+import com.example.springbootmovie.model.role.Role;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -26,15 +27,6 @@ public class ActorDto {
     @NotNull(message = "Actor photo path cannot be null")
     private String photoPath;
     private Long height;
-
-    public String getFullPhotoPath() {
-        String basePath = ResourceBundle.getBundle("application").getString("base.photo.path");
-        if (photoPath != null && !photoPath.isEmpty()) {
-            return basePath + photoPath;
-        }
-        return null;
-    }
-
     public static ActorDto of(ActorEntity actor) {
         return ActorDto.builder()
                 .id(actor.getId())

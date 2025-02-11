@@ -20,16 +20,10 @@ public class GenreDto {
     @Size(min = 1, max = 100, message = "Name must be between 1 and 100 characters")
     private String name;
     private List<MovieDto> movies;
+    @Size(max = 1500, message = "Description must be at most 500 characters")
     private String description;
     private String imagePath;
 
-    public String getFullImagePath() {
-        String basePath = ResourceBundle.getBundle("application").getString("base.genreImage.path");
-        if (imagePath != null && !imagePath.isEmpty()) {
-            return basePath + imagePath;
-        }
-        return null;
-    }
     public static GenreDto of(GenreEntity genre) {
         return GenreDto.builder()
                 .id(genre.getId())

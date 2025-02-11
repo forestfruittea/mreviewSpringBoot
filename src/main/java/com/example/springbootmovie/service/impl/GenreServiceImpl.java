@@ -19,7 +19,6 @@ import java.util.stream.Collectors;
 public class GenreServiceImpl implements GenreService {
     private final GenreRepository genreRepository;
     private final GenreMapper genreMapper;
-
     @Autowired
     public GenreServiceImpl(GenreRepository genreRepository, GenreMapper genreMapper) {
         this.genreRepository = genreRepository;
@@ -43,12 +42,11 @@ public class GenreServiceImpl implements GenreService {
 //    }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(Long genreId) {
         log.debug("deletes genre");
         genreRepository.deleteById(genreId);
     }
-
     @Override
     @Transactional(readOnly = true)
     public Optional<GenreDto> findById(Long genreId) {
@@ -65,7 +63,6 @@ public class GenreServiceImpl implements GenreService {
                 .map(genreMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<GenreDto> findAll() {
@@ -83,25 +80,12 @@ public class GenreServiceImpl implements GenreService {
                 .map(genreMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional
-    public GenreDto findOrSave(GenreDto genreDto) {
-        Optional<GenreEntity> existing = genreRepository.findByName(genreDto.getName());
-        if (existing.isPresent()) {
-            return genreMapper.toDto(existing.get());
-        }
-        log.debug("saves genre if not exist");
-        GenreEntity newGenre = genreMapper.toEntity(genreDto);
-        GenreEntity savedGenre = genreRepository.save(newGenre);
-        return genreMapper.toDto(savedGenre);
-    }
-    @Override
-    @Transactional(readOnly = true)
-    public List<GenreDto> getGenresByNames(List<String> genreNames) {
-        // Find genres by their names
-        return genreRepository.findByNameIn(genreNames).stream()
-                .map(GenreDto::of) // Map Genre to GenreDto
+    public List<GenreEntity> findOrCreateGenres(List<GenreDto> genreDtos) {
+        return genreDtos.stream()
+                .map(genreDto -> genreRepository.findByName(genreDto.getName())
+                        .orElseGet(() -> genreRepository.save(genreMapper.toEntity(genreDto))))
                 .collect(Collectors.toList());
     }
 }

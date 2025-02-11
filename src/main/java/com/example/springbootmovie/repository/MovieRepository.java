@@ -27,8 +27,8 @@ public interface MovieRepository extends JpaRepository<MovieEntity, Long> {
 //            "LEFT JOIN FETCH m.director " +
 //            "ORDER BY m.title")
 //    List<MovieEntity> findMoviesByPage();
-
-    // Find a movie by ID with eager fetching
+//
+//     Find a movie by ID with eager fetching
     @Query("SELECT m FROM MovieEntity m " +
             "LEFT JOIN FETCH m.director " +
             "WHERE m.id = :movieId")

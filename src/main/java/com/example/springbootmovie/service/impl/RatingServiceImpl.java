@@ -56,17 +56,12 @@ public class RatingServiceImpl implements RatingService {
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public double calculateAverageRating(Long movieId) {
-        List<RatingEntity> ratings = ratingRepository.findByMovieId(movieId);
-        log.debug("calculates average rating for movie");
-
-        if (ratings.isEmpty()) {
-            return 0.0;
-        }
-        return ratings.stream().mapToDouble(RatingEntity::getRating).average().orElse(0.0);
+        Double averageRating = ratingRepository.calculateAverageRatingByMovieId(movieId);
+        log.debug("Calculating average rating for movie with ID: {}", movieId);
+        return (averageRating != null) ? averageRating : 0.0;
     }
-
     @Override
     @Transactional
     public RatingDto update(RatingDto ratingDto) {

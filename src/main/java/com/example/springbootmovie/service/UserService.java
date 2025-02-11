@@ -8,7 +8,6 @@ public interface UserService {
     void delete(Long userId);
     Optional<UserDto> findById(Long id);
     Optional<UserDto> findByUsername(String username);
-    Long getLoggedInUserId(HttpServletRequest req);
     List<UserDto> findAllSorted();
     //TODO UserDto update(UserDto userDto);
     //TODO List<UserDto> findAll();

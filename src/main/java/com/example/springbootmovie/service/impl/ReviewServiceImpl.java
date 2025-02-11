@@ -1,5 +1,6 @@
 package com.example.springbootmovie.service.impl;
 
+import com.example.springbootmovie.exception.ResourceNotFoundException;
 import com.example.springbootmovie.model.dto.ReviewDto;
 import com.example.springbootmovie.model.dto.UserDto;
 import com.example.springbootmovie.model.entity.MovieEntity;
@@ -37,72 +38,50 @@ public class ReviewServiceImpl implements ReviewService {
         this.reviewRepository = reviewRepository;
         this.reviewMapper = reviewMapper;
     }
-
     @Override
     @Transactional
     public void save(ReviewDto reviewDto) {
-        Optional<MovieEntity> movieOptional = movieRepository.findById(reviewDto.getMovie().getId());
-        if (movieOptional.isEmpty()) {
-            throw new IllegalArgumentException("Movie not found");
-        }
-        MovieEntity movieEntity = movieOptional.get();
-        UserDto userDto = reviewDto.getUser();
-
-        Optional<UserEntity> userOptional = userRepository.findById(userDto.getId());
-        if (userOptional.isEmpty()) {
-            throw new IllegalArgumentException("User not found");
-        }
-        UserEntity userEntity = userOptional.get();
+        Long userId = reviewDto.getUser().getId();
+        Long movieId = reviewDto.getMovie().getId();
+        MovieEntity movieEntity = movieRepository.findById(reviewDto.getMovie().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("Movie with ID " + movieId + " not found"));
+        UserEntity userEntity = userRepository.findById(reviewDto.getUser().getId())
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + userId + " not found"));
 
         ReviewEntity reviewEntity = new ReviewEntity();
         reviewEntity.setUser(userEntity);
         reviewEntity.setCreatedAt(LocalDateTime.now());
         reviewEntity.setMovie(movieEntity);
         reviewEntity.setContent(reviewDto.getContent());
-        log.debug("saves review");
 
+        log.debug("Saving review for movie: {}", movieEntity.getTitle());
         reviewRepository.save(reviewEntity);
         }
     @Override
-    @Transactional(readOnly = true)
     public void delete(Long reviewId) {
         reviewRepository.deleteById(reviewId);
-        log.debug("deletes review");
-
+        log.debug("Review with ID {} has been deleted", reviewId);
     }
+
     @Override
     @Transactional(readOnly = true)
     public List<ReviewDto> findAllForMovie(Long movieId) {
         List<ReviewEntity> reviewEntities = reviewRepository.findByMovieId(movieId);
-        log.debug("finds all reviews for movie");
+        log.debug("Fetching all reviews for movie with ID: {}", movieId);
 
         return reviewEntities.stream()
                 .map(ReviewDto::of)
                 .collect(Collectors.toList());
     }
+
     @Override
     @Transactional(readOnly = true)
     public List<ReviewDto> findAllForUser(Long userId) {
         List<ReviewEntity> reviewEntities = reviewRepository.findByUserId(userId);
-        log.debug("finds all reviews for user");
+        log.debug("Fetching all reviews for user with ID: {}", userId);
 
         return reviewEntities.stream()
                 .map(ReviewDto::of)
                 .collect(Collectors.toList());
     }
-    @Override
-    @Transactional(readOnly = true)
-    public List<ReviewDto> findAllSortedByUsernameAndMovieTitle() {
-        log.debug("finds all reviews sorted by username and movie title");
-
-        return reviewRepository.findAll()
-                .stream()
-                .sorted(Comparator.comparing((ReviewEntity review) ->
-                                review.getUser() != null ? review.getUser().getUsername() : "")
-                        .thenComparing(review ->
-                                review.getMovie() != null ? review.getMovie().getTitle() : ""))
-                .map(reviewMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
 }

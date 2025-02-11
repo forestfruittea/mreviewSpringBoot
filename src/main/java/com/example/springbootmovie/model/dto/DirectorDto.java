@@ -24,13 +24,6 @@ public class DirectorDto {
     private String bio;
     private LocalDate dateOfBirth;
     private String photoPath;
-    public String getFullPhotoPath() {
-        String basePath = ResourceBundle.getBundle("application").getString("base.photo.path");
-        if (photoPath != null && !photoPath.isEmpty()) {
-            return basePath + photoPath;
-        }
-        return null;
-    }
     public static DirectorDto of(DirectorEntity director) {
         return DirectorDto.builder()
                 .id(director.getId())

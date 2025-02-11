@@ -1,5 +1,6 @@
 package com.example.springbootmovie.controller;
 
+import com.example.springbootmovie.exception.ResourceNotFoundException;
 import com.example.springbootmovie.model.dto.MovieDto;
 import com.example.springbootmovie.model.dto.ReviewDto;
 import com.example.springbootmovie.model.dto.UserDto;
@@ -7,17 +8,18 @@ import com.example.springbootmovie.service.MovieService;
 import com.example.springbootmovie.service.ReviewService;
 import com.example.springbootmovie.service.UserService;
 import com.example.springbootmovie.util.SecurityUtil;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
-@Controller
-@RequestMapping("/reviews")
+@Tag(name = "Reviews", description = "Endpoints for managing movie reviews")
+@RestController
+@RequestMapping("/api/reviews")
 public class ReviewController {
-
     private final ReviewService reviewService;
     private final UserService userService;
     private final MovieService movieService;
@@ -28,20 +30,36 @@ public class ReviewController {
         this.movieService = movieService;
     }
 
-    @PostMapping("/add")
-    public String addReview(@RequestParam Long movieId, @RequestParam String content) {
+    @Operation(
+            summary = "Add a new review",
+            description = "Creates a new review for a specified movie by the authenticated user."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Review added successfully"),
+            @ApiResponse(responseCode = "404", description = "User or Movie not found")
+    })
+    @PostMapping("/add/{movieId}")
+    public ResponseEntity<?> addReview(
+            @Parameter(description = "ID of the movie to review", example = "10")
+            @PathVariable Long movieId,
+
+            @Parameter(description = "Content of the review", example = "Amazing movie, must watch!")
+            @RequestParam String content) {
+
         Long userId = SecurityUtil.getLoggedInUserId();
-        Optional<UserDto> userOptional = userService.findById(userId);
-        Optional<MovieDto> movieOptional = movieService.findById(movieId);
 
-        if (userOptional.isPresent() && movieOptional.isPresent()) {
-            ReviewDto review = new ReviewDto();
-            review.setContent(content);
-            review.setUser(userOptional.get());
-            review.setMovie(movieOptional.get());
-            reviewService.save(review);
-        }
+        UserDto user = userService.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User with ID " + userId + " not found"));
 
-        return "redirect:/movie?id=" + movieId;
+        MovieDto movie = movieService.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie with ID " + movieId + " not found"));
+
+        ReviewDto review = new ReviewDto();
+        review.setContent(content);
+        review.setUser(user);
+        review.setMovie(movie);
+        reviewService.save(review);
+
+        return ResponseEntity.status(201).body(review);
     }
 }

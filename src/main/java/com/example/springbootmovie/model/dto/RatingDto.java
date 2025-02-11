@@ -1,6 +1,7 @@
 package com.example.springbootmovie.model.dto;
 
 import com.example.springbootmovie.model.entity.RatingEntity;
+import jakarta.validation.constraints.Positive;
 import lombok.*;
 
 @Getter
@@ -13,6 +14,7 @@ public class RatingDto {
     private Long id;
     private UserDto user;
     private MovieDto movie;
+    @Positive(message = "Rating must be a positive number")
     private int rating;
     public static RatingDto of(RatingEntity rating) {
         return RatingDto.builder()

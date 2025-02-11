@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 public class DirectorServiceImpl implements DirectorService{
     private final DirectorRepository directorRepository;
     private final DirectorMapper directorMapper;
-
     @Autowired
     public DirectorServiceImpl(DirectorRepository directorRepository, DirectorMapper directorMapper) {
         this.directorRepository = directorRepository;
@@ -40,13 +39,11 @@ public class DirectorServiceImpl implements DirectorService{
 //        log.debug("updates director");
 //        return directorMapper.toDto(directorEntity);
 //    }
-
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public void delete(Long directorId) {
         directorRepository.deleteById(directorId);
     }
-
     @Override
     @Transactional(readOnly = true)
     public Optional<DirectorDto> findById(Long directorId) {
@@ -62,7 +59,6 @@ public class DirectorServiceImpl implements DirectorService{
                 .map(directorMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional(readOnly = true)
     public List<DirectorDto> findAll() {
@@ -72,17 +68,10 @@ public class DirectorServiceImpl implements DirectorService{
                 .map(DirectorDto::of)
                 .collect(Collectors.toList());
     }
-
     @Override
     @Transactional
-    public DirectorDto findOrSave(DirectorDto directorDto) {
-        Optional<DirectorEntity> existing = directorRepository.findByName(directorDto.getName());
-        if (existing.isPresent()) {
-            log.debug("saves director");
-            return directorMapper.toDto(existing.get());
-        }
-        DirectorEntity newDirector = directorMapper.toEntity(directorDto);
-        DirectorEntity savedDirector = directorRepository.save(newDirector);
-        return directorMapper.toDto(savedDirector);
+    public DirectorEntity findOrCreateDirector(DirectorDto directorDto) {
+        return directorRepository.findByName(directorDto.getName())
+                .orElseGet(() -> directorRepository.save(directorMapper.toEntity(directorDto)));
     }
 }
